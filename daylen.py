@@ -10,16 +10,20 @@ import astral
 
 from PIL import Image, ImageDraw, ImageFont
 
-IMAGE_FN = "azmap.png"
+IMAGE_FN = "map.png"
 FONT_FN = "/usr/share/fonts/TTF/calibri.ttf"
 
-DEGREE_TO_PX = 12.84
-MIN_LATITUDE = 23
+MAP_CENTER_X = 998
+MAP_CENTER_Y = 293
+DEGREE_TO_PX = 13.35
+MIN_LATITUDE = 25
 MAX_LATITUDE = 90
 
 MIN_SEPARATION_DEG = 2.5
 GRAD_START_COLOR = (160, 0, 0)
 GRAD_END_COLOR = (0, 160, 0)
+
+DEBUG = False
 
 
 
@@ -34,8 +38,8 @@ def outline_latitude(img, latitude, string="", font_size=20, thickness=3, color=
     """
 
     r = (90 - latitude) * DEGREE_TO_PX
-    center_x = img.size[0] / 2
-    center_y = img.size[1] / 2
+    center_x = MAP_CENTER_X
+    center_y = MAP_CENTER_Y
 
     font = ImageFont.truetype(FONT_FN, font_size)
     (text_w, text_h) = font.getsize(string)
@@ -120,13 +124,26 @@ def debug_hsl_gradient(img, *extra):
         pos = i - min_val
         dc.rectangle([0 + pos*dim, 0, 0 + pos*dim + dim, dim], fill=color)
 
+def debug_latitudes(img):
+    start = None
+
+    for i in range(MIN_LATITUDE, MIN_LATITUDE+5):
+        if (i % 5 == 0):
+            start = i
+            break
+
+    for lat in range(start, MAX_LATITUDE, 5):
+        img = outline_latitude(img, lat, str(lat))
+
+    return img
+
 def print_date(img, date, font_size=40, padding=10):
 
     """ Print the date into the upper left corner of image. """
 
     dc = ImageDraw.Draw(img)
     font = ImageFont.truetype(FONT_FN, font_size)
-    date_str = date.strftime("%b %d")
+    date_str = date.strftime("%b\n%d")
 
     dc.text((padding, padding), date_str, font=font, fill=(20, 20, 20))
 
@@ -211,11 +228,7 @@ def get_isoline_latitude(date, daylen):
 
     return binsearch_latitude(MIN_LATITUDE, MAX_LATITUDE, daylen)
 
-def output_image(fn, date):
-
-    """ Output an image with given filename, for given date. """
-
-    img = Image.open(fn)
+def apply_isolines_to_image(img, date):
     daylen = 0
     daylen_incr = 0.5
     last_lat = None
@@ -249,10 +262,17 @@ def output_image(fn, date):
         daylen += daylen_incr
 
     print_date(img, date, font_size=72)
-    img.save("out.png")
+    return img
 
 def main():
     date = datetime.date(2016, 6, 1)
-    output_image(IMAGE_FN, date)
+    img = Image.open(IMAGE_FN)
+
+    if (not DEBUG):
+        img = apply_isolines_to_image(img, date)
+    else:
+        img = debug_latitudes(img)
+
+    img.save("out.png")
 
 main()
