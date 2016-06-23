@@ -23,6 +23,7 @@ MAX_LATITUDE = 90
 MIN_SEPARATION_DEG = 2.5
 GRAD_START_COLOR = (160, 0, 0)
 GRAD_END_COLOR = (0, 160, 0)
+USE_DAWNDUSK = True
 
 ANIMATE = True
 ANIMATE_OUTDIR = "out"
@@ -46,9 +47,15 @@ def output_animation_frame(month, day):
 
     fn = os.path.join(ANIMATE_OUTDIR, "{:02d}-{:02d}.png".format(month, day))
     map_img = Image.open(IMAGE_FN)
-    img = apply_isolines_to_image(map_img, date)
+
+    try:
+        open(fn, mode="w").close()
+    except OSError as e:
+        prerr("Cannot open {} for writing: {}".format(fn, e))
+        sys.exit(1)
 
     print("outputting to", fn)
+    img = apply_isolines_to_image(map_img, date)
     img.save(fn)
 
 def apply_isolines_to_image(img, date):
@@ -149,7 +156,9 @@ def get_daylen_on_latitude(date, lat):
     loc.solar_depression = "civil"
 
     try:
-        (start, end) = loc.daylight(date=date, local=False)
+        (start, end) = loc.daylight(date=date, local=False) \
+            if (not USE_DAWNDUSK) \
+            else (loc.dawn(date=date, local=False), loc.dusk(date=date, local=False))
     except astral.AstralError as e:
         if (is_summer(date)):
             return math.inf
@@ -298,7 +307,7 @@ def main():
     if (ANIMATE):
         animate()
     else:
-        date = datetime.date(2016, 12, 21)
+        date = datetime.date(2016, 6, 20)
         img = Image.open(IMAGE_FN)
 
         if (DEBUG):
