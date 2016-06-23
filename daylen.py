@@ -4,6 +4,7 @@ import colorsys
 import datetime
 import functools
 import math
+import os.path
 import sys
 
 import astral
@@ -23,11 +24,32 @@ MIN_SEPARATION_DEG = 2.5
 GRAD_START_COLOR = (160, 0, 0)
 GRAD_END_COLOR = (0, 160, 0)
 
+ANIMATE = True
+ANIMATE_OUTDIR = "out"
+
 DEBUG = False
 
 
 
 # Main pipeline
+
+def animate():
+    for month in range(1, 13):
+        for day in range(1, 32):
+            output_animation_frame(month, day)
+
+def output_animation_frame(month, day):
+    try:
+        date = datetime.date(2016, month, day)
+    except ValueError:
+        return
+
+    fn = os.path.join(ANIMATE_OUTDIR, "{:02d}-{:02d}.png".format(month, day))
+    map_img = Image.open(IMAGE_FN)
+    img = apply_isolines_to_image(map_img, date)
+
+    print("outputting to", fn)
+    img.save(fn)
 
 def apply_isolines_to_image(img, date):
     daylen = 0
@@ -273,14 +295,18 @@ def debug_latitudes(img):
 # Entry point
 
 def main():
-    date = datetime.date(2016, 6, 1)
-    img = Image.open(IMAGE_FN)
-
-    if (not DEBUG):
-        img = apply_isolines_to_image(img, date)
+    if (ANIMATE):
+        animate()
     else:
-        img = debug_latitudes(img)
+        date = datetime.date(2016, 6, 1)
+        img = Image.open(IMAGE_FN)
 
-    img.save("out.png")
+        if (DEBUG):
+            img = debug_latitudes(img)
+            img = debug_hsl_gradient(img)
+        else:
+            img = apply_isolines_to_image(img, date)
+
+        img.save("out.png")
 
 main()
