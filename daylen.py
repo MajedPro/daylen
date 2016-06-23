@@ -298,7 +298,7 @@ def main():
     if (ANIMATE):
         animate()
     else:
-        date = datetime.date(2016, 6, 1)
+        date = datetime.date(2016, 12, 21)
         img = Image.open(IMAGE_FN)
 
         if (DEBUG):
