@@ -18,5 +18,8 @@ To generate the animation using ffmpeg:
 	$ cd out
 	$ ffmpeg -pattern_type glob -i '*.png' -vf scale=-2:720 -c:v libx264 -preset slow -crf 20 out.mp4
 
-[The result](https://gfycat.com/CrispPlayfulAllosaurus).
+Results:
+
+* [Sunrise - sunset](https://gfycat.com/CrispPlayfulAllosaurus)
+* [Dawn - dusk](https://gfycat.com/YellowishEducatedBlackmamba)
 
